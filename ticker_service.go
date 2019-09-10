@@ -171,3 +171,40 @@ type PriceChangeStats struct {
 	LastID             int64  `json:"lastId"`
 	Count              int64  `json:"count"`
 }
+
+// TickerPriceService shows latest ticker price of a specific symbol(s)
+type TickerPriceService struct {
+	c      *Client
+	symbol string
+}
+
+// Symbol set symbol
+func (s *TickerPriceService) Symbol(symbol string) *TickerPriceService {
+	s.symbol = symbol
+	return s
+}
+
+// Do send request
+func (s *TickerPriceService) Do(ctx context.Context, opts ...RequestOption) (res *TickerPrice, err error) {
+	r := &request{
+		method:   "GET",
+		endpoint: "/api/v3/ticker/price",
+	}
+	r.setParam("symbol", s.symbol)
+	data, err := s.c.callAPI(ctx, r, opts...)
+	if err != nil {
+		return res, err
+	}
+	res = new(TickerPrice)
+	err = json.Unmarshal(data, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// TickerPrice defines latest ticker price
+type TickerPrice struct {
+	Symbol string `json:"symbol"`
+	Price  string `json:"price"`
+}
